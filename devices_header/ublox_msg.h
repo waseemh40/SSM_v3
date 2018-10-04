@@ -17,20 +17,15 @@
 #define 	MON			0x0A
 #define 	TIM			0x0D
 	//IDs for messages
-// MON class
-#define 	VER			0x04
 //CFG class
-#define 	CFG_CFG		0x09
 #define 	MSG			0x01
 #define 	DAT			0x06
 #define 	PRT 		0x00
 #define 	PM2 		0x3B
-#define     PMS			0x86
 #define 	RXM_CFG		0x11
 #define 	SBAS		0x16
 //NAV class
 #define 	PVT			0x07
-#define		SAT			0x35
 //TIM class
 //ACK class
 	//Synch words
@@ -47,13 +42,6 @@
 /*
  * private constants
  */
-static const uint8_t cfg_msg_sw_backup[] = {
-		0xB5,
-		0x62,
-		0x02, 0x41, 0x08, 0x00, 0x00, 0x00, 0x00, 0x00, 0x02, 0x00, 0x00, 0x00,
-		0x4d,
-		0x3b
-};
 static const uint8_t cfg_msg_poll_nav[] = {
 		SYNCH_1, SYNCH_2, CFG, MSG,	0x02, 0x00,
 		NAV, PVT,		//message NAV type PVT
@@ -62,6 +50,58 @@ static const uint8_t cfg_msg_poll_nav[] = {
 static const uint8_t nav_pvt_gps_data[] = {
 		SYNCH_1, SYNCH_2, NAV, PVT, 0x00, 0x00,
 		0x08, 0x19		//checksum (a and b)
+		};
+static const uint8_t cfg_prt_spi[] = {
+		SYNCH_1, SYNCH_2, CFG, PRT, 0x14, 0x00,
+		0x04,							//port id
+		0x00,							//reserved
+		0x00,	0x00,					//txready
+		0x00,	0x32,	0x00,	0x00,	//spi mode
+		0x00,	0x00,	0x00,	0x00,	//reserved
+		0x01,	0x00,					//inportmask=disable NMEA
+		0x01,	0x00,					//outportmask=disable NMEA
+		0x00,	0x00,					//flags
+		0x00,	0x00,					//reserved
+		0x52,	0x94					//checksum (a and b)
+		};
+static const uint8_t cfg_prt_uart[] = {
+		SYNCH_1, SYNCH_2, CFG, PRT, 0x14, 0x00,
+		0x01,							//port id
+		0x00,							//reserved
+		0x00,	0x00,					//txready
+		0x00,	0x00,	0x00,	0x00,	//spi mode
+		0x00,	0x00,	0x00,	0x00,	//reserved
+		0x00,	0x00,					//inportmask=disable all
+		0x00,	0x00,					//outportmask=disable all
+		0x00,	0x00,					//flags
+		0x00,	0x00,					//reserved
+		0x1b,	0x5c					//checksum (a and b)
+		};
+static const uint8_t cfg_prt_usb[] = {
+		SYNCH_1, SYNCH_2, CFG, PRT, 0x14, 0x00,
+		0x03,							//port id
+		0x00,							//reserved
+		0x00,	0x00,					//txready
+		0x00,	0x00,	0x00,	0x00,	//spi mode
+		0x00,	0x00,	0x00,	0x00,	//reserved
+		0x00,	0x00,					//inportmask=disable all
+		0x00,	0x00,					//outportmask=disable all
+		0x00,	0x00,					//flags
+		0x00,	0x00,					//reserved
+		0x1d,	0x84					//checksum (a and b)
+		};
+static const uint8_t cfg_prt_ddc[] = {
+		SYNCH_1, SYNCH_2, CFG, PRT, 0x14, 0x00,
+		0x00,							//port id
+		0x00,							//reserved
+		0x00,	0x00,					//txready
+		0x00,	0x00,	0x00,	0x00,	//spi mode
+		0x00,	0x00,	0x00,	0x00,	//reserved
+		0x00,	0x00,					//inportmask=disable all
+		0x00,	0x00,					//outportmask=disable all
+		0x00,	0x00,					//flags
+		0x00,	0x00,					//reserved
+		0x1a,	0x48					//checksum (a and b)
 		};
 static const uint8_t cfg_pm2_on_off[] = {
 		SYNCH_1, SYNCH_2, CFG, PM2, 0x2C, 0x00,

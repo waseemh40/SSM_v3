@@ -60,9 +60,6 @@ void debug_uint (u4_t v) {
 void debug_str (const u1_t* str) {
 	rs232_transmit_string(str,(uint8_t)strlen((char *)str));
 	delay_ms(2);
-	display_clear();
-	display_put_string(3, 3, str, font_small);
-	display_update();
 }
 
 void debug_val (const u1_t* label, u4_t val) {

@@ -12,11 +12,12 @@
 #include "../devices_header/ublox_gps.h"
 #include "../fat_filesystem_header/ff.h"
 #include "../fat_filesystem_header/diskio.h"
+#include "../devices_header/led_and_switch.h"
 
 
 #define 	INIT_RETRIES	10
 
-//#define 	USE_TBR 			true
+#define 	USE_TBR 			true
 #define		USE_GPS				true
 //#define		USE_SD_CARD			true
 #define		USE_RADIO			true

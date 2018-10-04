@@ -173,6 +173,7 @@
 			  debug_str((const u1_t*)"\tEV_JOINING\n");
 			  break;
 		  case EV_JOINED:
+			  status_led_radio(true);
 			  debug_str((const u1_t*)"\tEV_JOINED\n");
 			  os_clearCallback(&init_job);
 			  //rgb_shutdown();

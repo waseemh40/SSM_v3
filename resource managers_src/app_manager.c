@@ -182,6 +182,7 @@ bool app_manager_init(void){
 
 	  	  	  	  //basic initializations
 	  //rgb_init();
+	  GPIO_PinModeSet(gpioPortE, 9, gpioModePushPull, 0);
 	  rs232_init();
 	  rs232_enable();
 	  delay_init();
@@ -189,32 +190,20 @@ bool app_manager_init(void){
 	  //rgb_on(false,false,true);
 
 #ifdef USE_GPS
-//	  init_retry=0;
-//	  do{
-//		  temp_init_flag= gps_init();
-//			 init_retry++;
-//			 if(init_retry>INIT_RETRIES){
-//					sprintf((char *)rs232_tx_buf,"GPS INIT FAILED\n");
-//					debug_str(rs232_tx_buf);
-//					//rgb_shutdown();
-//					//rgb_on(true,false,false);
-//					return 0;
-//			 }
-//	  	  }while(!temp_init_flag);
-//	sprintf((char *)rs232_tx_buf,"GPS Init. DONE\n");
-//	debug_str(rs232_tx_buf);
-	  GPIO_PinOutSet(LED_GPS_RADIO_PORT, LED_GPS);
-	  temp_init_flag= gps_init();
-	  if(temp_init_flag){
-		  sprintf((char *)rs232_tx_buf,"GPS INIT Success\n");
-		  debug_str(rs232_tx_buf);
-		}
-	  else{
-		  sprintf((char *)rs232_tx_buf,"GPS INIT FAILED\n");
-		  GPIO_PinOutClear(LED_GPS_RADIO_PORT, LED_GPS);
-		  debug_str(rs232_tx_buf);
-		  return 0;
-	  }
+	  status_led_gps(true);
+	  init_retry=0;
+	  do{
+		  temp_init_flag= gps_init();
+			 init_retry++;
+			 if(init_retry>INIT_RETRIES){
+					sprintf((char *)rs232_tx_buf,"GPS INIT FAILED\n");
+					debug_str(rs232_tx_buf);
+					status_led_gps(false);
+					return 0;
+			 }
+	  	  }while(!temp_init_flag);
+	sprintf((char *)rs232_tx_buf,"GPS Init. DONE\n");
+	debug_str(rs232_tx_buf);
 #endif
 
 #ifdef USE_SD_CARD
