@@ -30,7 +30,10 @@
 
 	// provide device ID (8 bytes, LSBF)
 	void os_getDevEui (u1_t* buf) {
-	    memcpy(buf, DEVEUI, 8);
+	    uint8_t byte_6=0;
+		memcpy(buf, DEVEUI, 8);
+		byte_6=read_switch() & 0x3f;	//which is MSByte -1!!!
+		buf[6]=byte_6;
 	}
 
 	// provide device key (16 bytes)
@@ -104,13 +107,6 @@
 
 	static void app_funct (osjob_t* j) {
 
-
-//			while(1){
-				GPIO_PinOutToggle(gpioPortE, 9);
-				delay_ms(9);
-				os_clearCallback(&app_job);
-				return;
-//			}
 		time_manager_cmd_t		time_manager_cmd=basic_sync;
 				//add 10secs
 		ref_tstamp.gps_timestamp+=BASIC_SYNCH_SECONDS;
@@ -174,11 +170,13 @@
 			  break;
 		  case EV_JOINED:
 			  status_led_radio(true);
+			  display_clear();
+			  display_put_string(3,3,"\tJoined LoRa\n",font_medium);
+			  display_update();
 			  debug_str((const u1_t*)"\tEV_JOINED\n");
 			  os_clearCallback(&init_job);
-			  //rgb_shutdown();
 			  setup_channel();						//setup channel....
-			  /*while(1){
+			  while(1){
 				  delay_ms(7);
 				  ref_tstamp=gps_get_nav_data();
 				  ref_tstamp.gps_timestamp=time_manager_unixTimestamp(ref_tstamp.year,ref_tstamp.month,ref_tstamp.day,
@@ -186,7 +184,7 @@
 				  if(ref_tstamp.valid==true && ref_tstamp.gps_timestamp%10==0){
 					  break;
 				  }
-			  }*/
+			  }
 			  sprintf(temp_buf,"Ref Tstamp=%ld\n",ref_tstamp.gps_timestamp);
 			  debug_str((const u1_t*)temp_buf);
 			  ref_tstamp.gps_timestamp=ref_tstamp.gps_timestamp;
@@ -195,6 +193,8 @@
 			  time_manager_init();
 			  sprintf(temp_buf,"Dstmp\tnano\tTstamp\tsec\tFlag\tTacc\tflags\n");
 			  debug_str((const u1_t*)temp_buf);
+			  display_put_string(3,3,"\tExecuting loop...\n",font_medium);
+			  display_update();
 			  break;
 		  case EV_TXCOMPLETE:
 #ifdef USE_LORA_ACK

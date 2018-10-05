@@ -69,13 +69,13 @@ bool tbr_cmd_update_rgb_led(tbr_cmd_t tbr_cmd, time_t timestamp){
 
 	ret_flag=tbr_send_cmd(tbr_cmd,timestamp);
 	if(ret_flag){
-		//rgb_on(false,true,false);
+		set_status_led(false,true);
 	}
 	else{
-		//rgb_on(true,false,false);
+		set_status_led(true,false);
 	}
 	delay_ms(7);
-	//rgb_shutdown();
+	set_status_led(false,false);
 	return ret_flag;
 }
 int nmea0183_checksum(char *nmea_data)
