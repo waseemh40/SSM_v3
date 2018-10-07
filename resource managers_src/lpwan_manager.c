@@ -10,7 +10,6 @@
 			/*
 			 * Shared variables
 			 */
-	static osjob_t			user_job;
 	static osjob_t 			init_job;
 	static osjob_t			app_job;
 #ifdef USE_RADIO
@@ -30,10 +29,10 @@
 
 	// provide device ID (8 bytes, LSBF)
 	void os_getDevEui (u1_t* buf) {
-	    uint8_t byte_6=0;
-		memcpy(buf, DEVEUI, 8);
-		byte_6=read_switch() & 0x3f;	//which is MSByte -1!!!
-		buf[6]=byte_6;
+		uint8_t byte_1=0;
+	    memcpy(buf, DEVEUI, 8);
+		byte_1=read_switch() & 0x3f;	//which is MSByte -1!!!
+		buf[1]=byte_1;
 	}
 
 	// provide device key (16 bytes)
@@ -92,21 +91,7 @@
 		return;
 	}
 
-	void (*user_callback)(void);
-	void register_user_callback(void (*user_cb)(void))
-	{
-	    user_callback = user_cb;
-	}
-
-	static void user_funct (osjob_t* j) {
-		if (user_callback)
-			user_callback();
-		
-		return;
-	}
-
 	static void app_funct (osjob_t* j) {
-
 		time_manager_cmd_t		time_manager_cmd=basic_sync;
 				//add 10secs
 		ref_tstamp.gps_timestamp+=BASIC_SYNCH_SECONDS;
@@ -117,8 +102,7 @@
 
 		if(time_manager_cmd==advance_sync){
 				//update Timestamps
-			// TODO - Use different get function
-			//running_tstamp=gps_get_nav_data();
+			running_tstamp=gps_get_nav_data();
 			running_tstamp.gps_timestamp=time_manager_unixTimestamp(running_tstamp.year,running_tstamp.month,running_tstamp.day,
 																	running_tstamp.hour,running_tstamp.min,running_tstamp.sec);
 			running_tstamp.gps_timestamp+=50;
@@ -150,11 +134,6 @@
 			 * public funtions
 			 */
 
-	void schedule_user_job(void)
-	{
-	    os_setCallback(&user_job, user_funct);
-	}
-
 	void lpwan_init(void){
 		os_init();
 		debug_str((const u1_t*)"\t\tRadio Version. OS initialized and join called. Waiting for join to finish...\n");
@@ -181,7 +160,8 @@
 				  ref_tstamp=gps_get_nav_data();
 				  ref_tstamp.gps_timestamp=time_manager_unixTimestamp(ref_tstamp.year,ref_tstamp.month,ref_tstamp.day,
 						  	  	  	  	  	  	  	  	  	  	  	  	 ref_tstamp.hour,ref_tstamp.min,ref_tstamp.sec);
-				  if(ref_tstamp.valid==true && ref_tstamp.gps_timestamp%10==0){
+				  //if(ref_tstamp.valid==true && ref_tstamp.gps_timestamp%10==0){
+				  if(ref_tstamp.valid==true){
 					  break;
 				  }
 			  }
@@ -193,8 +173,10 @@
 			  time_manager_init();
 			  sprintf(temp_buf,"Dstmp\tnano\tTstamp\tsec\tFlag\tTacc\tflags\n");
 			  debug_str((const u1_t*)temp_buf);
-			  display_put_string(3,3,"\tExecuting loop...\n",font_medium);
+			  sprintf(temp_buf,"\tExecuting loop...\nTS=%ld\n",ref_tstamp.gps_timestamp);
+			  display_put_string(3,3,temp_buf,font_medium);
 			  display_update();
+			  set_status_led(false,false);
 			  break;
 		  case EV_TXCOMPLETE:
 #ifdef USE_LORA_ACK

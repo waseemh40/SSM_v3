@@ -311,9 +311,6 @@ uint8_t	app_manager_get_lora_buffer(uint8_t	*lora_buffer){
 	int				loop_var=0;
 	uint8_t			lora_buf_length=0;
 
-	tbr_lora_length = 1;
-	tbr_lora_buf[0] = 'U';
-
 	if(tbr_lora_length>0){
 		for(loop_var=0;loop_var<tbr_lora_length;loop_var++){
 			lora_buffer[loop_var]=tbr_lora_buf[loop_var];
