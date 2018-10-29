@@ -23,8 +23,10 @@
 #define 	CMD_12		0x4C
 #define 	CMD_16		0x50
 #define 	CMD_17		0x51
+#define 	CMD_18		0x52
+#define 	CMD_23		0x57
 #define 	CMD_24		0x58
-#define 	CMD_25		0x58
+#define 	CMD_25		0x59
 #define 	CMD_41		0x69
 #define 	CMD_55		0x77
 #define 	CMD_58		0x7A
@@ -36,6 +38,11 @@
 #define 	CRC_0		0x95
 #define 	CRC_8		0x0F
 #define 	CRC_58		0x75
+
+	//tokens
+#define		DATA_TKN_24	0xFE
+#define		DATA_TKN_25	0xFC
+#define		STOP_TOKEN	0xFD
 
 #define 	SD_CARD_BLOCK_SIZE	512
 /*

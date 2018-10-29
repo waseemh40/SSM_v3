@@ -43,6 +43,7 @@ void 	rs485_enable(void);
 void 	rs485_disable(void);
 void 	rs485_reset(void);
 int 	rs485_transmit_string(char* data,uint8_t length);
+void 	rs485_transmit_string_new(char* data,uint8_t length);
 int 	rs485_transmit_char(char data );
 char 	rs485_recieve_char(void);
 

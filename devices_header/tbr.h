@@ -57,7 +57,7 @@ void 		tbr_shutdown(void);
 bool 		tbr_send_cmd(tbr_cmd_t tbr_cmd,time_t timestamp);
 bool 		tbr_send_synch_msg(char *sync_msg);					//NOT used
 uint8_t 	tbr_tag_count(void);
-int 		tbr_recv_msg(char *msg_buf, int *msg_length);
+uint8_t		tbr_recv_msg(char *msg_buf, int *msg_length);
 uint8_t 	tbr_recv_msg_uint(uint8_t *lora_msg_buf, int *lora_length,
 							char *msg_buf, int *msg_length);
 #endif /* SRC_TBR_H_ */
