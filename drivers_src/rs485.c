@@ -44,11 +44,11 @@ void rs485_init(void){
 	LEUART_Reset(RS485_UART);
 	LEUART_Init(RS485_UART, &leuartInit);
 	RS485_UART->ROUTE |= (0x1UL <<9) | LEUART_ROUTE_TXPEN | LEUART_ROUTE_RXPEN;		//LOC2, TX & RX are enabled
-	LEUART_FreezeEnable(RS485_UART,false);
 	LEUART_IntClear(RS485_UART, _LEUART_IF_MASK);
 	LEUART_IntEnable(RS485_UART, LEUART_IF_RXDATAV);
 	NVIC_ClearPendingIRQ(RS485_IRQn);
 	NVIC_EnableIRQ(RS485_IRQn);
+	LEUART_FreezeEnable(RS485_UART,false);
 	rs485_rx_mode();
 	fifo_tbr_init();
 	return;
@@ -77,7 +77,6 @@ int rs485_transmit_string(char* data,uint8_t length){
 		fifo_tbr_add(fifo_tbr_tx_cmd,data[loop_var]);
 	}
 	rs485_tx_mode();
-	delay_ms(1);
 	LEUART_IntEnable(RS485_UART,LEUART_IF_TXBL);
 	ret_val=1;
 	}
@@ -85,6 +84,18 @@ int rs485_transmit_string(char* data,uint8_t length){
 		ret_val=-1;
 	}
 	return ret_val;
+}
+
+void rs485_transmit_string_new(char* data,uint8_t length){
+	int loop_var=0;
+	rs485_tx_mode();
+	for(loop_var=0;loop_var<length;loop_var++){
+		LEUART_Tx(RS485_UART,(uint8_t)data[loop_var] );
+		delay_ms(0);
+	}
+	rs485_rx_mode();
+	return;
+
 }
 
 int rs485_transmit_char(char data){
@@ -126,28 +137,21 @@ void rs485_rx_mode(void){
  * INT handlers
  */
 void RS485_ISR(){
-	LEUART_IntClear(RS485_UART, LEUART_IF_TXBL);
-	LEUART_IntClear(RS485_UART, LEUART_IF_RXDATAV);
-	 if (RS485_UART->STATUS & LEUART_STATUS_TXBL){
-		if(!fifo_tbr_is_empty(fifo_tbr_tx_cmd)){
+	uint32_t	int_mask=LEUART_IntGetEnabled(RS485_UART);
+	 if (int_mask & LEUART_IF_TXBL){
+		while(!fifo_tbr_is_empty(fifo_tbr_tx_cmd)){
 			isr_rx_tx_char=fifo_tbr_remove(fifo_tbr_tx_cmd);
-			LEUART_FreezeEnable(RS485_UART,true);
 			LEUART_Tx(RS485_UART,(uint8_t)isr_rx_tx_char );
-			LEUART_FreezeEnable(RS485_UART,false);
-			delay_ms(1);
+			delay_ms(0);
 		}
-	  else{
-		  	LEUART_IntDisable(RS485_UART,LEUART_IF_TXBL);
-		  	rs485_rx_mode();
-	  	}
+		LEUART_IntDisable(RS485_UART,LEUART_IF_TXBL);
+		rs485_rx_mode();
 	  }
-	 if (RS485_UART->STATUS & LEUART_STATUS_RXDATAV){
-		 LEUART_FreezeEnable(RS485_UART,true);
+	 if (int_mask & LEUART_IF_RXDATAV){
 		 isr_rx_tx_char=(char) LEUART_Rx(RS485_UART);
-		 LEUART_FreezeEnable(RS485_UART,false);
 			 if(!fifo_tbr_is_full(current_rx_fifo)){
 				 fifo_tbr_add(current_rx_fifo, isr_rx_tx_char);
 			}
 	 }
-
+	 LEUART_IntClear(RS485_UART, int_mask);
 }

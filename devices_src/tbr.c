@@ -116,7 +116,6 @@ int		parse_message_tbr(char *buffer){
 	uint8_t			n_converted_tokens=0;
 	bool			found_partial_msg=false;
 
-	//debug_str("\t\t\tTBR Parse Called\n");
 	if(last_broken_message_flag==true){
 		shift_Elements(buffer, CMD_RX_TX_BUF_SIZE ,last_broken_message_size);
 		for(loop_var=0;loop_var<last_broken_message_size;loop_var++){
@@ -154,9 +153,9 @@ int		parse_message_tbr(char *buffer){
 		}
 		last_broken_message_flag=true;
 		last_broken_message_size=loop_var-outer_loop_var;
-		 debug_str("\t\t\t\tParse found and added half message...");
-		 debug_str(broken_msg_buf);
-		 debug_char('\n');
+		 //debug_str("\t\t\t\tParse found and added half message...");
+		 //debug_str(broken_msg_buf);
+		 //debug_char('\n');
 	}
 	n_converted_tokens=0;
 
@@ -175,26 +174,19 @@ int		parse_message_tbr(char *buffer){
 							debug_str("\t\t\tParse DANGER, string length larger than 50!!!");
 							debug_str(token_str);
 							debug_char('\n');
-							//token_length=50;
 						}
 						for(loop_var=0;loop_var<token_length;loop_var++){
 							array_add(token_str[loop_var]);
 						}
 						array_add('\n');
-						 //debug_str("\t\t\tParse Added complete message...");
-						 //debug_str(token_str);
-						 //debug_char('\n');
 					}
 					else if(token_str[0]=='a') {
-						 //debug_str("\t\t\tParse discarding ACK message...");
-						 //debug_str(token_str);
-						 //debug_char('\n');
 						 incomplete_ack_flag=true;
 					}
 					else{
-						 debug_str("\t\t\t!!!Parse discarding unknown message type!!!");
-						 debug_str(token_str);
-						 debug_char('\n');
+						 //debug_str("\t\t\t!!!Parse discarding unknown message type!!!");
+						 //debug_str(token_str);
+						 //debug_char('\n');
 					}
 					n_converted_tokens++;
 					if(n_converted_tokens>=n_complete_messages){
@@ -202,11 +194,9 @@ int		parse_message_tbr(char *buffer){
 					}
 					token_str=strtok(NULL,ref_token);
 				}
-				//debug_str("\t\t\tTBR Parse Returned\n");
 				return 1;
 			}
 			else{
-				//debug_str("\t\t\tTBR Parse Returned\n");
 				return -1;
 			}
 		}
@@ -217,28 +207,6 @@ int		parse_message_tbr(char *buffer){
 }
 
 bool check_other_messages(char * cmd_rx_tx_buf){
-	/*int				temp_var=0;
-	char	 		*cmd_compare_str;
-
-	debug_str("\t\tTBR CoM Called\n");
-	cmd_compare_str=strchr(cmd_rx_tx_buf,'$');
-	 if(cmd_compare_str==NULL){
-		 debug_str("\t\tTBR CoM Returning\n");
-		 return false;
-	 }
-	 else{
-		 temp_var=parse_message_tbr(cmd_rx_tx_buf);
-
-			debug_str("\t\tTBR CoM Returning\n");
-
-		 if(temp_var>0){
-			 return true;
-		 }
-		 else{
-			 return false;
-		 }
-	 }
-		return 0;*/
 	return parse_message_tbr(cmd_rx_tx_buf);
 }
 void clear_buffer(char *buf, uint16_t size){
@@ -255,11 +223,9 @@ bool get_and_compare(char *compare_string){
 	int				loop_var=0;
 	char			temp_char='0';
 	bool			ret_flag=false;
-	//int				debug_var=0;
 
-	//debug_str("\tTBR G & C Called\n");
 	clear_buffer(cmd_rx_tx_buf,CMD_RX_TX_BUF_SIZE);
-	tbr_backoff_delay=4;
+	tbr_backoff_delay=8;
 	delay_ms(tbr_backoff_delay);												//response time from TBR
 
 	for(loop_var=0;loop_var<FIFO_TBR_RX_DATA_SIZE;loop_var++){
@@ -270,35 +236,17 @@ bool get_and_compare(char *compare_string){
 	cmd_compare_str=strstr(cmd_rx_tx_buf,(const char *)compare_string);
 	if(cmd_compare_str!=NULL){
 		ret_flag=true;
-		debug_str("\t\tTBR ACK received\n");
-		/*debug_var=loop_var;
-		sprintf(resuable_buffer, "\t\tTBR ACK RXD. Buf is:\n");
-		debug_str(resuable_buffer);
-		for(loop_var=0;loop_var<debug_var;loop_var++){
-			debug_char(cmd_rx_tx_buf[loop_var]);
-		}
-		debug_char('\n');*/
 	}
 	 else{
 		ret_flag=false;
-		debug_str("\t\tTBR ACK NOT received\n");
-		/*debug_var=loop_var;
-		sprintf(resuable_buffer, "\t\tTBR NO ack rcvd. Buf is:\n");
-		debug_str(resuable_buffer);
-		for(loop_var=0;loop_var<debug_var;loop_var++){
-			debug_char(cmd_rx_tx_buf[loop_var]);
-		}
-		debug_char('\n');*/
 	 }
 	incomplete_ack_flag=false;
 	check_other_messages(cmd_rx_tx_buf);
-	 if(ret_flag==false){
+	 /*if(ret_flag==false){
 		 if(incomplete_ack_flag==true){
-			 debug_str("\t\t\tTBR Incomplete ACK found in buffer\n");
 			 ret_flag=true;
 		 }
-	 }
-	 //debug_str("\tTBR G & C Returned\n");
+	 }*/
 	return ret_flag;
 }
 
@@ -410,7 +358,7 @@ uint8_t convert_tbr_msgs_to_uint(char *src_buf, uint8_t *dst_buf, uint8_t msg_co
 		single_msg[outer_loop_var]=src_buf[outer_loop_var+1];	//+1 to ignore $
 	}
 	dst_buf[0]=(uint8_t)strtoul(single_msg,&temp_ptr,10);
-	dst_buf[0]=read_switch() & 0x3f;
+	dst_buf[0]=0x80;
 	offset_dst_buf=1;
 		//now convert rest of the messages into uint8_t (7 bytes per message => TimeStamp(4)+milli_sec(2)+tagID(1))
 	offset_src_buf=0;
@@ -440,6 +388,7 @@ uint8_t convert_tbr_msgs_to_uint(char *src_buf, uint8_t *dst_buf, uint8_t msg_co
 	 * public functions
 	 */
 void tbr_init(void){
+	//GPIO_PinModeSet(PWR_EN_PORT, RS485_12V_PWR_EN, gpioModePushPull, 0);
 	rs485_init();
 	rs485_enable();
 	clear_buffer(array_msg,ARRAY_MESSAGE_SIZE);
@@ -450,6 +399,7 @@ void tbr_init(void){
 }
 
 void tbr_shutdown(void){
+	//GPIO_PinOutClear(PWR_EN_PORT, RS485_12V_PWR_EN);
 	return;
 }
 
@@ -462,29 +412,65 @@ bool tbr_send_cmd(tbr_cmd_t tbr_cmd,time_t timestamp){
 
 	if( tbr_cmd==cmd_sn_req){
 		sprintf((char *)cmd_tx_buf,"?\n");
-		rs485_transmit_string(cmd_tx_buf,1);
+		rs485_transmit_string_new(cmd_tx_buf,1);
 		ret_flag=get_and_compare((char *)"SN=");
 	}
 	else if(tbr_cmd==cmd_basic_sync){
-		sprintf((char *)cmd_tx_buf,"(+)\n");
-		rs485_transmit_string(cmd_tx_buf,3);
+		//sprintf((char *)cmd_tx_buf,"(+)\n");
+		cmd_tx_buf[0]='(';
+		cmd_tx_buf[1]='+';
+		cmd_tx_buf[2]=')';
+		cmd_tx_buf[3]='\r';
+		rs485_transmit_string_new(cmd_tx_buf,4);
 		ret_flag=get_and_compare((char *)"ack01\r");			//changed from 01
+		/*if (!ret_flag){
+			ret_flag=get_and_compare((char *)"ack01\r");		//changed from 01
+		}
+		if (!ret_flag){
+			ret_flag=get_and_compare((char *)"ack01\r");		//changed from 01
+		}*/
+		/*if(ret_flag){
+			debug_str("\t\tTBR ACK received\n");
+		}
+		else {
+			debug_str("\t\tTBR ACK NOT received\n");
+		}*/
+
 	}
 	else if(tbr_cmd==cmd_advance_sync){
 		my_timestamp=timestamp;
 		luhn=CalculateLuhn(&my_timestamp);
-		sprintf((char *)cmd_tx_buf,"(+)%ld\n",my_timestamp);
-		temp_var=strlen((const char *)cmd_tx_buf);
-		cmd_tx_buf[temp_var-2]=luhn;						//change last digit of TimeStamp
-		rs485_transmit_string(cmd_tx_buf,temp_var-1);
+		//sprintf((char *)cmd_tx_buf,"(+)%ld\n",my_timestamp);
+		cmd_tx_buf[0]='(';											cmd_tx_buf[1]='+'; 											cmd_tx_buf[2]=')';
+		cmd_tx_buf[3]=((int)(timestamp/1000000000))%10 +  '0';		cmd_tx_buf[4]=((int)(timestamp/100000000))%10 + '0'; 		cmd_tx_buf[5]=((int)(timestamp/10000000))%10 + '0';
+		cmd_tx_buf[6]=((int)(timestamp/1000000))%10 + '0';			cmd_tx_buf[7]=((int)(timestamp/100000))%10 + '0'; 			cmd_tx_buf[8]=((int)(timestamp/10000))%10 + '0';
+		cmd_tx_buf[9]=((int)(timestamp/1000))%10 + '0';				cmd_tx_buf[10]=((int)(timestamp/100))%10 + '0'; 			cmd_tx_buf[11]=((int)(timestamp/10))%10 + '0';
+		cmd_tx_buf[12]=luhn;										cmd_tx_buf[13]='\r';
+
+		//temp_var=strlen((const char *)cmd_tx_buf);
+		//cmd_tx_buf[temp_var-2]=luhn;						//change last digit of TimeStamp
+		rs485_transmit_string_new(cmd_tx_buf,14);
 		ret_flag=get_and_compare((char *)"ack01\rack02\r");		//changed from 02
+		/*if (!ret_flag){
+			ret_flag=get_and_compare((char *)"ack01\rack02\r");		//changed from 02
+		}
+		if (!ret_flag){
+			ret_flag=get_and_compare((char *)"ack01\rack02\r");		//changed from 02
+		}*/
+		/*if(ret_flag){
+			debug_str("\t\tTBR ACK received\n");
+		}
+		else {
+			debug_str("\t\tTBR ACK NOT received\n");
+		}*/
+
 	}
 	else{
 		ret_flag=false;
 	}
 	return ret_flag;
 }
-int tbr_recv_msg(char *msg_buf, int *msg_length){
+uint8_t tbr_recv_msg(char *msg_buf, int *msg_length){
 	int 			msg_count=0;
 	int 			loop_var=0;
 	char			temp_char='0';
@@ -513,9 +499,6 @@ uint8_t tbr_recv_msg_uint(uint8_t *lora_msg_buf, int *lora_length, char *msg_buf
 
 		//SD card msg_buffer
 	clear_buffer(msg_buf, ARRAY_MESSAGE_SIZE);
-
-	//sprintf(resuable_buffer, "\t\t\tMSg buffer is:\n");
-	//debug_str(resuable_buffer);
 
 	loop_var=0;
 	temp_char_last=0;

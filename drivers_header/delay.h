@@ -13,7 +13,7 @@
 
 #define DELAY_TIMER 		TIMER2
 #define DELAY_CLK			cmuClock_TIMER2
-#define CLK_KHZ				7000
+#define CLK_KHZ				6000
 #define CLK_PRESCALAR		10
 
 /*
