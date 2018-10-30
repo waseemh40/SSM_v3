@@ -256,6 +256,9 @@ uint8_t convert_single_tbr_msg_into_uint(char *single_msg, uint8_t *dst_buf, uin
 	char			*token;
 	bool			messgae_type=TBR_DETECION_MSG;
 	tbr_msesage_t	tbr_message;
+	int				diff_freq=0;
+	uint8_t			detection_freq=0;
+	uint8_t			code_type_unsigned=0;
 
 		//$000xxx
 	token = strtok(single_msg, ref_token);
@@ -274,16 +277,24 @@ uint8_t convert_single_tbr_msg_into_uint(char *single_msg, uint8_t *dst_buf, uin
 		//Codetype or Temperature
 	token = strtok(NULL, ref_token);
 	if(messgae_type==TBR_DETECION_MSG){
-		if(strncmp(token,(char *)"S256",4)==0)
+		if((strncmp(token,(char *)"R256",4)==0) || (strncmp(token,(char *)"r256",4)==0))
 			tbr_message.CodeType=00;
-		else if(strncmp(token,(char *)"R64K",4)==0)
+		else if((strncmp(token,(char *)"R04K",4)==0) || (strncmp(token,(char *)"r04k",4)==0) || (strncmp(token,(char *)"R04k",4)==0))
 			tbr_message.CodeType=01;
-		else if(strncmp(token,(char *)"R04K",4)==0)
+		else if((strncmp(token,(char *)"R64K",4)==0) || (strncmp(token,(char *)"r64k",4)==0) || (strncmp(token,(char *)"R64k",4)==0))
 			tbr_message.CodeType=02;
-		else if(strncmp(token,(char *)"R256",4)==0)
+		else if((strncmp(token,(char *)"S256",4)==0) || (strncmp(token,(char *)"s256",4)==0))
 			tbr_message.CodeType=03;
+		else if((strncmp(token,(char *)"R01M",4)==0) || (strncmp(token,(char *)"r01m",4)==0) || (strncmp(token,(char *)"R01m",4)==0))
+			tbr_message.CodeType=04;
+		else if((strncmp(token,(char *)"S64K",4)==0) || (strncmp(token,(char *)"s64k",4)==0) || (strncmp(token,(char *)"S64k",4)==0))
+			tbr_message.CodeType=05;
+		else if((strncmp(token,(char *)"H256",4)==0) || (strncmp(token,(char *)"h256",4)==0))
+			tbr_message.CodeType=06;
+		else if((strncmp(token,(char *)"D256",4)==0) || (strncmp(token,(char *)"d256",4)==0))
+			tbr_message.CodeType=07;
 		else
-			tbr_message.CodeType=0xFF;
+			tbr_message.CodeType=0xFE;
 	}
 	else{
 		tbr_message.Temperature=(uint16_t)strtoul(token,&temp_ptr,10);
@@ -312,8 +323,23 @@ uint8_t convert_single_tbr_msg_into_uint(char *single_msg, uint8_t *dst_buf, uin
 	else{
 		tbr_message.frequency=(uint8_t)strtoul(token,&temp_ptr,10);
 	}
-
+		//change code type as per frequency
 	token = strtok(NULL, ref_token);
+	if(messgae_type==TBR_DETECION_MSG){
+		detection_freq=(uint8_t)strtoul(token,&temp_ptr,10);
+		diff_freq=detection_freq-69;
+		if(detection_freq>69){
+			code_type_unsigned=tbr_message.CodeType+(16*diff_freq);
+			tbr_message.CodeType=code_type_unsigned;
+		}
+		else if(detection_freq<69){
+			code_type_unsigned=(uint8_t)(tbr_message.CodeType+(16*(diff_freq-1)));
+			tbr_message.CodeType=code_type_unsigned;
+		}
+		else {		//in case of 69 KHz do not change code type
+			;
+		}
+	}
 			//fill the lora buffer
 	dst_buf[offset+0]=(uint8_t)(tbr_message.timestamp>>24);
 	dst_buf[offset+1]=(uint8_t)(tbr_message.timestamp>>16);
