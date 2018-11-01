@@ -6,7 +6,7 @@
  */
 
 #include "../resource managers_header/lpwan_manager.h"
-
+#include "em_wdog.h"
 			/*
 			 * Shared variables
 			 */
@@ -87,33 +87,6 @@
 		return;
 	}
 	static void init_funct (osjob_t* j) {
-		RMU_ResetControl(rmuResetBU, rmuResetModeClear);
-		gps_poll_nav_status();
-		  while(1){
-			  ref_tstamp=gps_get_nav_data();
-			  ref_tstamp.gps_timestamp=time_manager_unixTimestamp(ref_tstamp.year,ref_tstamp.month,ref_tstamp.day,
-					  	  	  	  	  	  	  	  	  	  	  	  	 ref_tstamp.hour,ref_tstamp.min,ref_tstamp.sec);
-			  if(ref_tstamp.valid==false){
-				  gps_state++;
-				  if(gps_state>15){
-					  debug_str("GPS double polling scenario\n");
-					  gps_poll_nav_status();
-				  }
-			  }
-			  else {
-				  if(ref_tstamp.fix==0x03 && ref_tstamp.gps_timestamp%10==0){
-					  break;
-				  }
-				  else {
-						gps_poll_nav_status();
-				  }
-			  }
-		  }
-		time_manager_init();
-		debug_str((const u1_t*)"\t\tRadio Version. OS and sync initialized. Waiting for join to finish...\n");
-		display_clear();
-		display_put_string(3,3,"\tRunning Loop\nNOT JOINED...\n",font_medium);
-		display_update();
 	    // reset MAC state
 	    LMIC_reset();
 	    // start joining
@@ -153,6 +126,7 @@
 			 	lora_tx_function();
 			}
 		}
+		WDOGn_Feed(WDOG);
 		os_clearCallback(&app_job);
 	return;
 	}
@@ -161,7 +135,42 @@
 			 */
 
 	void lpwan_init(void){
+			//Setup and initialize WDOG
+		WDOG_Init_TypeDef	wdog_init=WDOG_INIT_DEFAULT;
+		wdog_init.perSel=wdogPeriod_16k;
+		wdog_init.em2Run=true;
+		wdog_init.em3Run=true;
+		CMU_OscillatorEnable(cmuOsc_ULFRCO, true, true);
+		RMU_ResetControl(rmuResetBU, rmuResetModeClear);
+		gps_poll_nav_status();
+		  while(1){
+			  ref_tstamp=gps_get_nav_data();
+			  ref_tstamp.gps_timestamp=time_manager_unixTimestamp(ref_tstamp.year,ref_tstamp.month,ref_tstamp.day,
+					  	  	  	  	  	  	  	  	  	  	  	  	 ref_tstamp.hour,ref_tstamp.min,ref_tstamp.sec);
+			  if(ref_tstamp.valid==false){
+				  gps_state++;
+				  if(gps_state>15){
+					  debug_str("GPS double polling scenario\n");
+					  delay_ms(7);
+					  gps_poll_nav_status();
+				  }
+			  }
+			  else {
+				  if(ref_tstamp.fix==0x03 && ref_tstamp.gps_timestamp%10==0 && ref_tstamp.tAcc<=1000){
+					  break;
+				  }
+				  else {
+						gps_poll_nav_status();
+				  }
+			  }
+		  }
+		time_manager_init();
 		os_init();
+		WDOGn_Init(WDOG,&wdog_init);
+		debug_str((const u1_t*)"\t\tRadio Version. OS and sync initialized. Waiting for join to finish...\n");
+		display_clear();
+		display_put_string(3,3,"\tRunning Loop\nNOT JOINED...\n",font_medium);
+		display_update();
 		os_setCallback(&init_job, init_funct);
 		os_runloop();
 	}
