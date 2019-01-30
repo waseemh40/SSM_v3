@@ -33,7 +33,7 @@ enum { DR_PAGE_US915 = 0x10 };
 
 // Global maximum frame length
 enum { STD_PREAMBLE_LEN  =  8 };
-enum { MAX_LEN_FRAME     = 150 };		//64
+enum { MAX_LEN_FRAME     = 230 };		//original 64, during bjoroya 150
 enum { LEN_DEVNONCE      =  2 };
 enum { LEN_ARTNONCE      =  3 };
 enum { LEN_NETID         =  3 };

@@ -290,13 +290,15 @@ nav_data_t		parse_message(uint8_t data[]){
 	*/
 bool 			gps_init(void){
 	uint8_t 				reply=0;
-	int						loop_var=0;
 	bool					flag_port=false;
 	bool					flag_init=false;
 	bool					flag_config_lp=false;
 	bool					flag_sbas=false;
 	bool					flag_enter_lp=false;
+	bool					flag_select_gps=false;
+	bool					flag_config_tp=false;
 	const unsigned char  	rs232_tx_buf[64];
+	nav_data_t				start_fix;
 
 	spi_init();
 	//GPIO_PinModeSet(PWR_EN_PORT,GPS_PWR_EN,gpioModePushPull,0);
@@ -304,18 +306,29 @@ bool 			gps_init(void){
 	//gps_on();
 					//configure ports
 	flag_port=port_config();
+	flag_select_gps=send_cmd_rx_ack(cfg_gnss,(sizeof(cfg_gnss)/sizeof(uint8_t)));
+	flag_config_tp=send_cmd_rx_ack(cfg_tp5,(sizeof(cfg_tp5)/sizeof(uint8_t)));
 	reply=0x00;
 					//wait for fix
-	do{
-		reply=receiver_nav_status();
-		delay_ms(9);
-		if((reply==0x73) || (reply==0x33)){
+	gps_poll_nav_status();
+	while(1){
+		start_fix=gps_get_nav_data();
+		sprintf((char *)rs232_tx_buf,"GPS Nav Status=%d\n",start_fix.fix);
+		rs232_transmit_string(rs232_tx_buf,strlen((char *)rs232_tx_buf));
+		if(!start_fix.valid){
+			reply++;
+			if(reply>15){
+				gps_poll_nav_status();
+				reply=0;
+				delay_ms(9);
+			}
+		}
+		if(start_fix.fix==3){
 			flag_init=true;
 			break;
 		}
-		sprintf((char *)rs232_tx_buf,"GPS Nav Status=%d\n",reply);
-		rs232_transmit_string(rs232_tx_buf,strlen((char *)rs232_tx_buf));
-	}while(1);
+		delay_ms(9);
+	}
 					//configure and enter low power
 	//flag_config_lp=config_low_power();
 	flag_sbas=disable_sbas();
@@ -336,7 +349,7 @@ bool 			gps_init(void){
 	else{
 		return false;
 	}*/
-	if(flag_port==true && flag_sbas==true && flag_init==true){
+	if(flag_port==true && flag_sbas==true && flag_init==true && flag_config_tp==true && flag_select_gps==true){
 		return true;
 	}
 	else{

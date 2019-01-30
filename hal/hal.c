@@ -184,6 +184,7 @@ void GPIO_EVEN_IRQHandler()	//impar
 //			//timer_cycles=TIMER_CounterGet(TIMER3);
 //		}
 		///////////////////////////
+		GPIO_PinOutToggle(LED_GPS_RADIO_PORT, LED_GPS);
 		time_count++;
 		 if(time_count==ADVANCE_SYNCH_SECONDS){
 			 time_manager_cmd=advance_sync;

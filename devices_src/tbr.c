@@ -389,9 +389,10 @@ uint8_t convert_tbr_msgs_to_uint(char *src_buf, uint8_t *dst_buf, uint8_t msg_co
 		//now convert rest of the messages into uint8_t (7 bytes per message => TimeStamp(4)+milli_sec(2)+tagID(1))
 	offset_src_buf=0;
 	if(msg_count>10){
-		sprintf(resuable_buffer, "\tMessage length =%d. NO LoRA parse\n",msg_count);
-		debug_str(resuable_buffer);
-		return 0;
+		//sprintf(resuable_buffer, "\tMessage length =%d. NO LoRA parse\n",msg_count);
+		//debug_str(resuable_buffer);
+		//return 0;
+		msg_count=10;
 	}
 	for(outer_loop_var=0;outer_loop_var<msg_count;outer_loop_var++){
 		clear_buffer(single_msg, 50);

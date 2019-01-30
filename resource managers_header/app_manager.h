@@ -19,11 +19,11 @@
 
 #define 	USE_TBR 			true
 #define		USE_GPS				true
-#define		USE_SD_CARD			true
+//#define		USE_SD_CARD			true
 #define		USE_RADIO			true
-#define 	BOTH_RADIO_SD_CARD	true		//app_manager.c => inside advance_synch_message function
+//#define 	BOTH_RADIO_SD_CARD	true		//app_manager.c => inside advance_synch_message function
 //#define 	SD_CARD_ONLY		true		//app_manager.c => inside advance_synch_message function
-//#define		RADIO_ONLY			true
+#define		RADIO_ONLY			true
 //#define	USE_LORA_ACK		true
 	/*
 	 * shared variables

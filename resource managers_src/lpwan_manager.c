@@ -13,6 +13,7 @@
 	static osjob_t 			init_job;
 	static osjob_t			app_job;
 	static bool				joined_lora=false;
+	static bool				last_tx_complete=true;
 	static uint8_t			gps_state=0;
 	static uint8_t 			node_id=0;
 
@@ -119,12 +120,14 @@
 			diff_in_tstamp= (int)(ref_tstamp.gps_timestamp-running_tstamp.gps_timestamp);
 			sprintf(temp_buf,"LoRA_join_flag=%d\tTime Diff:Ref=%ld\tCur=%ld\tdiff=%d\tmin=%d\tsec=%d\tnano=%ld\ttAcc=%ld\tGPS_fix=%2x\tgps_state=%d\n",joined_lora,(time_t)ref_tstamp.gps_timestamp,(time_t)running_tstamp.gps_timestamp,diff_in_tstamp,running_tstamp.min,running_tstamp.sec,running_tstamp.nano,running_tstamp.tAcc,running_tstamp.fix,gps_state);
 			debug_str(temp_buf);
-		if(time_manager_cmd==advance_sync && joined_lora==true){
-			lora_msg_length=app_manager_get_lora_buffer(lora_buffer);
-			lora_buffer[0]=node_id;
-			if(lora_msg_length>0){
-			 	lora_tx_function();
-			}
+			if(time_manager_cmd==advance_sync && joined_lora==true && last_tx_complete==true){
+				lora_msg_length=app_manager_get_lora_buffer(lora_buffer);
+				lora_buffer[0]=node_id;
+				if(lora_msg_length>0){
+					lora_tx_function();
+					GPIO_PinOutSet(LED_GPS_RADIO_PORT, LED_RADIO);
+					last_tx_complete=false;
+				}
 		}
 		WDOGn_Feed(WDOG);
 		os_clearCallback(&app_job);
@@ -142,6 +145,9 @@
 		wdog_init.em3Run=true;
 		CMU_OscillatorEnable(cmuOsc_ULFRCO, true, true);
 		RMU_ResetControl(rmuResetBU, rmuResetModeClear);
+		display_clear();
+		sprintf(temp_buf,"Node ID=%2x\nInit. successful\nResolving GPS timestamp",node_id);
+		display_put_string(3,3,temp_buf,font_medium);
 		gps_poll_nav_status();
 		  while(1){
 			  ref_tstamp=gps_get_nav_data();
@@ -153,10 +159,12 @@
 					  debug_str("GPS double polling scenario\n");
 					  delay_ms(7);
 					  gps_poll_nav_status();
+					  gps_state=0;
 				  }
 			  }
 			  else {
-				  if(ref_tstamp.fix==0x03 && ref_tstamp.gps_timestamp%10==0 && ref_tstamp.tAcc<=1000){
+				  //if(ref_tstamp.fix==0x03 && ref_tstamp.gps_timestamp%10==0 && ref_tstamp.tAcc<=1000){
+				  if(ref_tstamp.fix==0x03 && ref_tstamp.gps_timestamp%10==0){
 					  break;
 				  }
 				  else {
@@ -169,7 +177,8 @@
 		WDOGn_Init(WDOG,&wdog_init);
 		debug_str((const u1_t*)"\t\tRadio Version. OS and sync initialized. Waiting for join to finish...\n");
 		display_clear();
-		display_put_string(3,3,"\tRunning Loop\nNOT JOINED...\n",font_medium);
+		sprintf(temp_buf,"Node ID=%2x\nRunning Loop\nNOT JOINED...\n",node_id);
+		display_put_string(3,3,temp_buf,font_medium);
 		display_update();
 		os_setCallback(&init_job, init_funct);
 		os_runloop();
@@ -187,7 +196,8 @@
 			  setup_channel();						//setup channel....
 			  joined_lora=true;
 			  display_clear();
-			  display_put_string(3,3,"\tRunning Loop\nJOINED LoRa...\n",font_medium);
+			  sprintf(temp_buf,"Node ID=%2x\nRunning Loop\nJOINED LoRa...\n",node_id);
+			  display_put_string(3,3,temp_buf,font_medium);
 			  display_update();
 			  break;
 		  case EV_TXCOMPLETE:
@@ -202,6 +212,8 @@
 		  }
 #else
 		  debug_str((const u1_t*)"\tEV_TXCOMPLETE\n");
+		  GPIO_PinOutClear(LED_GPS_RADIO_PORT, LED_RADIO);
+		  last_tx_complete=true;
 #endif
 			  break;
 		  case EV_JOIN_FAILED:
