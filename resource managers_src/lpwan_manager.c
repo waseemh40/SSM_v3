@@ -146,6 +146,16 @@
 		CMU_OscillatorEnable(cmuOsc_ULFRCO, true, true);
 		RMU_ResetControl(rmuResetBU, rmuResetModeClear);
 		display_clear();
+			//Timing accuracy issue
+		uint32_t	t_acc_limit=1000;
+		node_id=read_switch() & 0x3f;
+		if(node_id>=32){
+			t_acc_limit=1000;
+		}
+		else{
+			t_acc_limit=2000000000;	//nsec which is default...
+		}
+
 		sprintf(temp_buf,"Node ID=%2x\nInit. successful\nResolving GPS timestamp",node_id);
 		display_put_string(3,3,temp_buf,font_medium);
 		gps_poll_nav_status();
@@ -163,8 +173,8 @@
 				  }
 			  }
 			  else {
-				  //if(ref_tstamp.fix==0x03 && ref_tstamp.gps_timestamp%10==0 && ref_tstamp.tAcc<=1000){
-				  if(ref_tstamp.fix==0x03 && ref_tstamp.gps_timestamp%10==0){
+				  if(ref_tstamp.fix==0x03 && ref_tstamp.gps_timestamp%10==0 && ref_tstamp.tAcc<=t_acc_limit){
+				  //if(ref_tstamp.fix==0x03 && ref_tstamp.gps_timestamp%10==0){
 					  break;
 				  }
 				  else {
